@@ -1,0 +1,1 @@
+﻿Scaffold-DbContext "Data Source=DESKTOP-S4I2BKN\SQLEXPRESS;Initial Catalog=HRMDB;Integrated Security=True;TrustServerCertificate=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Entities -force
