@@ -1,4 +1,5 @@
-
+Alter table UserMst  add  [Address] nvarchar(max) NULL;
+	Alter table userMst  add [Pincode] nvarchar(8)  NULL;
 INSERT INTO UserMst (
     UserId, Fullname, Email, Gender, ProfilePic, 
     Password, ConfirmPassword, Contact, RoleId, 
