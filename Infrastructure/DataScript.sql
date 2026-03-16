@@ -158,7 +158,21 @@ VALUES
 ('EditTicket', 'Edit Ticket', 1, 1, GETDATE(), GETDATE(), 1, 0),
 ('ViewTicket', 'View Ticket', 1, 1, GETDATE(), GETDATE(), 1, 0),
 ('DeleteTicket', 'Delete Ticket', 1, 1, GETDATE(), GETDATE(), 1, 0),
-('UpdateTicketStatus', 'Update Ticket Status', 1, 1, GETDATE(), GETDATE(), 1, 0);
+('UpdateTicketStatus', 'Update Ticket Status', 1, 1, GETDATE(), GETDATE(), 1, 0),
+('UpdateLeaveStatus', 'Update Leave Status', 1, 1, GETDATE(), GETDATE(), 1, 0),
+('AddLeave', 'Add Leave', 1, 1, GETDATE(), GETDATE(), 1, 0),
+('EditLeave', 'Edit Leave', 1, 1, GETDATE(), GETDATE(), 1, 0),
+('AddLeaveType', 'Add LeaveType', 1, 1, GETDATE(), GETDATE(), 1, 0),
+('EditLeaveType', 'Edit LeaveType', 1, 1, GETDATE(), GETDATE(), 1, 0),
+('ViewLeaveType', 'View LeaveType', 1, 1, GETDATE(), GETDATE(), 1, 0),
+('DeleteLeaveType', 'Delete LeaveType', 1, 1, GETDATE(), GETDATE(), 1, 0),
+('ViewLeavePolicy', 'View LeavePolicy', 1, 1, GETDATE(), GETDATE(), 1, 0),
+('AddLeavePolicy', 'Add LeavePolicy', 1, 1, GETDATE(), GETDATE(), 1, 0),
+('EditLeavePolicy', 'Edit LeavePolicy', 1, 1, GETDATE(), GETDATE(), 1, 0);
+
+
+
+;
 
 
 INSERT INTO RolePermissionMst
@@ -273,3 +287,17 @@ JOIN PermissionMst p
 WHERE r.RoleName = 'Manager'
   AND r.IsDelete = 0
   AND p.IsDelete = 0;
+
+  INSERT INTO Holidays (HolidayName, HolidayDate, Description)
+VALUES
+('Republic Day', '2026-01-26', 'National Holiday'),
+
+('Mahashivratri', '2026-02-15', 'Hindu Festival'),
+
+('Holi', '2026-03-14', 'Festival of Colors'),
+
+('Ram Navami', '2026-03-30', 'Hindu Festival'),
+
+('Independence Day', '2026-08-15', 'National Holiday'),
+
+('Gandhi Jayanti', '2026-10-02', 'Birth Anniversary of Mahatma Gandhi');

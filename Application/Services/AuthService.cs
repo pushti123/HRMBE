@@ -35,74 +35,131 @@ namespace Application.Services
             LoginResponseDTO res = new LoginResponseDTO();
             try
             {
-                var userDetail = await _commonRepositry.UserList().Select(x => new { x.Id, x.Email, x.Password, x.RoleId, x.Fullname,x.ProfilePic }).FirstOrDefaultAsync(x => x.Email == request.Email && x.Password == request.Password);
-                if (userDetail != null)
+                if (request.LoggedInFrom == "SystemLogin")
                 {
-                    var roleDetail = await _commonRepositry.RoleList().FirstOrDefaultAsync(x => x.Id == userDetail.RoleId);
-                    var tokenDetail = await _commonRepositry.TokenList().FirstOrDefaultAsync(x => x.UserId == userDetail.Id);
-                    if (tokenDetail != null)
-                    {
-                        if (tokenDetail.TokenExpiryDate < DateTime.Now)
-                        {
-                            tokenDetail.RefreshTokenExpiryDate = (tokenDetail.RefreshTokenExpiryDate > DateTime.Now) ? tokenDetail.RefreshTokenExpiryDate : DateTime.Now.AddMinutes(Convert.ToDouble(_configuration.GetSection("Jwt")["RefreshTokenExpiryMinutes"]));
-                            tokenDetail.Token = await GenerateToken(userDetail.Id, Convert.ToInt32(userDetail.RoleId), roleDetail.RoleName);
-                            tokenDetail.TokenExpiryDate = DateTime.Now.AddMinutes(Convert.ToDouble(_configuration.GetSection("Jwt")["DurationInMinutes"]));
-                            tokenDetail.RefreshToken = await GenerateRefreshToken();
-                            tokenDetail.UpdatedAt = DateTime.Now;
 
-                            _context.Entry(tokenDetail).State = EntityState.Modified;
-                            await _context.SaveChangesAsync();
+                    var userDetail = await _commonRepositry.UserList().Select(x => new { x.Id, x.Email, x.Password, x.RoleId, x.Fullname, x.ProfilePic }).FirstOrDefaultAsync(x => x.Email == request.Email && x.Password == request.Password);
+                    if (userDetail != null)
+                    {
+                        var roleDetail = await _commonRepositry.RoleList().FirstOrDefaultAsync(x => x.Id == userDetail.RoleId);
+                        var tokenDetail = await _commonRepositry.TokenList().FirstOrDefaultAsync(x => x.UserId == userDetail.Id);
+                        if (tokenDetail != null)
+                        {
+                            if (tokenDetail.TokenExpiryDate < DateTime.Now)
+                            {
+                                tokenDetail.RefreshTokenExpiryDate = (tokenDetail.RefreshTokenExpiryDate > DateTime.Now) ? tokenDetail.RefreshTokenExpiryDate : DateTime.Now.AddMinutes(Convert.ToDouble(_configuration.GetSection("Jwt")["RefreshTokenExpiryMinutes"]));
+                                tokenDetail.Token = await GenerateToken(userDetail.Id, Convert.ToInt32(userDetail.RoleId), roleDetail.RoleName);
+                                tokenDetail.TokenExpiryDate = DateTime.Now.AddMinutes(Convert.ToDouble(_configuration.GetSection("Jwt")["DurationInMinutes"]));
+                                tokenDetail.RefreshToken = await GenerateRefreshToken();
+                                tokenDetail.UpdatedAt = DateTime.Now;
+
+                                _context.Entry(tokenDetail).State = EntityState.Modified;
+                                await _context.SaveChangesAsync();
+                            }
+                            res.Email = userDetail.Email;
+                            res.RoleName = roleDetail.RoleName;
+                            res.Token = tokenDetail.Token;
+                            res.RefreshToken = tokenDetail.RefreshToken;
+                            res.RoleId = Convert.ToInt32(userDetail.RoleId);
+                            res.ProfilePic = userDetail.ProfilePic != null ? userDetail.ProfilePic : null;
                         }
-                        res.Email = userDetail.Email;
-                        res.RoleName = roleDetail.RoleName;
-                        res.Token = tokenDetail.Token;
-                        res.RefreshToken = tokenDetail.RefreshToken;
-                        res.RoleId = Convert.ToInt32(userDetail.RoleId);
-                        res.ProfilePic = userDetail.ProfilePic != null ? userDetail.ProfilePic : null;
+                        else
+                        {
+                            var token = await GenerateToken(userDetail.Id, Convert.ToInt32(userDetail.RoleId), roleDetail.RoleName);
+                            TokenMst tokenMst = new TokenMst();
+                            tokenMst.UserId = userDetail.Id;
+                            tokenMst.Token = token;
+                            tokenMst.TokenExpiryDate = DateTime.Now.AddMinutes(Convert.ToDouble(_configuration.GetSection("Jwt")["DurationInMinutes"]));
+                            tokenMst.RefreshToken = await GenerateRefreshToken();
+                            tokenMst.RefreshTokenExpiryDate = DateTime.Now.AddMinutes(Convert.ToDouble(_configuration.GetSection("Jwt")["RefreshTokenExpiryMinutes"]));
+                            tokenMst.CreatedAt = DateTime.Now;
+                            tokenMst.UpdatedAt = DateTime.Now;
+
+                            await _context.TokenMsts.AddAsync(tokenMst);
+                            await _context.SaveChangesAsync();
+                            res.Email = userDetail.Email;
+                            res.RoleId = Convert.ToInt32(userDetail.RoleId);
+                            res.RoleName = roleDetail.RoleName;
+                            res.Token = tokenMst.Token;
+                            res.RefreshToken = tokenMst.RefreshToken;
+                        }
+
+                        var rolePermissionList = await (from permission in _commonRepositry.PermissionList().Where(x => !x.IsDelete)
+                                                        join rolePermission in _commonRepositry.RolePermissionList().Where(x => x.RoleId == userDetail.RoleId)
+                                                        on permission.Id equals rolePermission.PermissionId into grp
+                                                        from rolePermission in grp.DefaultIfEmpty()
+                                                        select new LoginResponseDTO.PermissionDetail
+                                                        {
+                                                            PerrmissionName = permission.PermissionName,
+                                                            HasPermission = rolePermission != null ? true : false,
+                                                        }).ToListAsync();
+
+                        res.PermissionDetailList = rolePermissionList;
+
+                        response.Data = res;
+                        response.StatusCode = HttpStatusCode.OK;
+                        response.Status = true;
+                        response.Message = "Login successfully!";
                     }
                     else
                     {
-                        var token = await GenerateToken(userDetail.Id, Convert.ToInt32(userDetail.RoleId), roleDetail.RoleName);
-                        TokenMst tokenMst = new TokenMst();
-                        tokenMst.UserId = userDetail.Id;
-                        tokenMst.Token = token;
-                        tokenMst.TokenExpiryDate = DateTime.Now.AddMinutes(Convert.ToDouble(_configuration.GetSection("Jwt")["DurationInMinutes"]));
-                        tokenMst.RefreshToken = await GenerateRefreshToken();
-                        tokenMst.RefreshTokenExpiryDate = DateTime.Now.AddMinutes(Convert.ToDouble(_configuration.GetSection("Jwt")["RefreshTokenExpiryMinutes"]));
-                        tokenMst.CreatedAt = DateTime.Now;
-                        tokenMst.UpdatedAt = DateTime.Now;
-
-                        await _context.TokenMsts.AddAsync(tokenMst);
-                        await _context.SaveChangesAsync();
-                        res.Email = userDetail.Email;
-                        res.RoleId = Convert.ToInt32(userDetail.RoleId);
-                        res.RoleName = roleDetail.RoleName;
-                        res.Token = tokenMst.Token;
-                        res.RefreshToken = tokenMst.RefreshToken;
+                        response.StatusCode = HttpStatusCode.NotFound;
+                        response.Status = false;
+                        response.Message = "Data is invalid!";
                     }
-
-                    var rolePermissionList = await (from permission in _commonRepositry.PermissionList().Where(x => !x.IsDelete)
-                                                    join rolePermission in _commonRepositry.RolePermissionList().Where(x => x.RoleId == userDetail.RoleId)
-                                                    on permission.Id equals rolePermission.PermissionId into grp
-                                                    from rolePermission in grp.DefaultIfEmpty()
-                                                    select new LoginResponseDTO.PermissionDetail
-                                                    {
-                                                        PerrmissionName = permission.PermissionName,
-                                                        HasPermission = rolePermission != null ? true : false,
-                                                    }).ToListAsync();
-
-                    res.PermissionDetailList = rolePermissionList;
-
-                    response.Data = res;
-                    response.StatusCode = HttpStatusCode.OK;
-                    response.Status = true;
-                    response.Message = "Login successfully!";
                 }
                 else
                 {
-                    response.StatusCode = HttpStatusCode.NotFound;
-                    response.Status = false;
-                    response.Message = "Data is invalid!";
+                    var userDetail = await _commonRepositry.ResumeParserUserList().FirstOrDefaultAsync(x => x.Email == request.Email && x.Password == request.Password);
+                    if(userDetail != null)
+                    {
+                        var tokenDetail = await _commonRepositry.TokenList().FirstOrDefaultAsync(x => x.UserId == userDetail.ResumeParserId);
+                        if (tokenDetail != null)
+                        {
+                            if (tokenDetail.TokenExpiryDate < DateTime.Now)
+                            {
+                                tokenDetail.RefreshTokenExpiryDate = (tokenDetail.RefreshTokenExpiryDate > DateTime.Now) ? tokenDetail.RefreshTokenExpiryDate : DateTime.Now.AddMinutes(Convert.ToDouble(_configuration.GetSection("Jwt")["RefreshTokenExpiryMinutes"]));
+                                tokenDetail.Token = await GenerateToken(userDetail.ResumeParserId, 1, "Resume Parser");
+                                tokenDetail.TokenExpiryDate = DateTime.Now.AddMinutes(Convert.ToDouble(_configuration.GetSection("Jwt")["DurationInMinutes"]));
+                                tokenDetail.RefreshToken = await GenerateRefreshToken();
+                                tokenDetail.UpdatedAt = DateTime.Now;
+
+                                _context.Entry(tokenDetail).State = EntityState.Modified;
+                                await _context.SaveChangesAsync();
+                            }
+                            res.Email = userDetail.Email;
+                            res.Token = tokenDetail.Token;
+                            res.RefreshToken = tokenDetail.RefreshToken;
+                        }
+                        else
+                        {
+                            var token = await GenerateToken(userDetail.ResumeParserId, 1, "Resume Parser");
+                            TokenMst tokenMst = new TokenMst();
+                            tokenMst.UserId = userDetail.ResumeParserId;
+                            tokenMst.Token = token;
+                            tokenMst.TokenExpiryDate = DateTime.Now.AddMinutes(Convert.ToDouble(_configuration.GetSection("Jwt")["DurationInMinutes"]));
+                            tokenMst.RefreshToken = await GenerateRefreshToken();
+                            tokenMst.RefreshTokenExpiryDate = DateTime.Now.AddMinutes(Convert.ToDouble(_configuration.GetSection("Jwt")["RefreshTokenExpiryMinutes"]));
+                            tokenMst.CreatedAt = DateTime.Now;
+                            tokenMst.UpdatedAt = DateTime.Now;
+
+                            await _context.TokenMsts.AddAsync(tokenMst);
+                            await _context.SaveChangesAsync();
+                            res.Email = userDetail.Email;
+                            res.Token = tokenMst.Token;
+                            res.RefreshToken = tokenMst.RefreshToken;
+                        }
+                        response.Data = res;
+                        response.StatusCode = HttpStatusCode.OK;
+                        response.Status = true;
+                        response.Message = "Login successfully!";
+                    }
+                    else
+                    {
+                        response.StatusCode = HttpStatusCode.NotFound;
+                        response.Status = false;
+                        response.Message = "User is not exists!";
+                    }
                 }
             }
             catch { throw; }
@@ -124,11 +181,29 @@ namespace Application.Services
                         if (tokenDetail.RefreshTokenExpiryDate > DateTime.Now)
                         {
                             var userDetail = await _commonRepositry.UserList().Select(x => new { x.Id, x.RoleId, x.Fullname }).FirstOrDefaultAsync(x => x.Id == tokenDetail.UserId);
+                            var  resumeParserUserDetail = await _commonRepositry.ResumeParserUserList().FirstOrDefaultAsync(x => x.ResumeParserId == tokenDetail.UserId);
                             if (userDetail != null)
                             {
                                 var roleDetail = await _commonRepositry.RoleList().FirstOrDefaultAsync(x => x.Id == userDetail.RoleId);
                                 tokenDetail.RefreshTokenExpiryDate = tokenDetail.RefreshTokenExpiryDate;
                                 tokenDetail.Token = await GenerateToken(userDetail.Id, Convert.ToInt32(userDetail.RoleId), roleDetail.RoleName);
+                                tokenDetail.TokenExpiryDate = DateTime.Now.AddMinutes(Convert.ToDouble(_configuration.GetSection("Jwt")["DurationInMinutes"]));
+                                tokenDetail.RefreshToken = await GenerateRefreshToken();
+                                tokenDetail.UpdatedAt = DateTime.Now;
+
+                                _context.Entry(tokenDetail).State = EntityState.Modified;
+                                await _context.SaveChangesAsync();
+
+                                responseDTO.Token = tokenDetail.Token;
+                                responseDTO.RefreshToken = tokenDetail.RefreshToken;
+                                response.StatusCode = HttpStatusCode.OK;
+                                response.Status = true;
+                                response.Message = "RefreshToken generated successfully!";
+                            }
+                            else if(resumeParserUserDetail != null)
+                            {
+                                tokenDetail.RefreshTokenExpiryDate = tokenDetail.RefreshTokenExpiryDate;
+                                tokenDetail.Token = await GenerateToken(resumeParserUserDetail.ResumeParserId, 1, "Resume Parser");
                                 tokenDetail.TokenExpiryDate = DateTime.Now.AddMinutes(Convert.ToDouble(_configuration.GetSection("Jwt")["DurationInMinutes"]));
                                 tokenDetail.RefreshToken = await GenerateRefreshToken();
                                 tokenDetail.UpdatedAt = DateTime.Now;

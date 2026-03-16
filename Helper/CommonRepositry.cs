@@ -46,5 +46,73 @@ namespace Helper
         {
             return _HRMDBContext.TicketMsts.AsQueryable();
         }
+
+        public IQueryable <LeaveType> LeaveTypeMstList()
+        {
+            return _HRMDBContext.LeaveTypes.AsQueryable();
+        }
+
+        public IQueryable<LeavePolicy> LeavePolicyMstList()
+        {
+            return _HRMDBContext.LeavePolicies.AsQueryable();
+        }
+
+        public IQueryable<EmployeeLeaveBalance> EmployeeLeaveBalanceList()
+        {
+            return _HRMDBContext.EmployeeLeaveBalances.AsQueryable();
+        }
+        public IQueryable<LeaveApplication> LeaveMstList()
+        {
+            return _HRMDBContext.LeaveApplications.AsQueryable();
+        }
+
+        public IQueryable<Holiday> HolidayList()
+        {
+            return _HRMDBContext.Holidays.AsQueryable();
+        }
+        public IQueryable<LeaveApplicationDetail> LeaveApplicationDetailList()
+        {
+            return _HRMDBContext.LeaveApplicationDetails.AsQueryable();
+        }
+        public IQueryable<Candidate> CandidateList()
+        {
+            return _HRMDBContext.Candidates.AsQueryable();
+        }
+        public IQueryable<CandidateEducation> CandidateEducationList()
+        {
+            return _HRMDBContext.CandidateEducations.AsQueryable();
+        }
+        public IQueryable<CandidateSkill> CandidateSkillList()
+        {
+            return _HRMDBContext.CandidateSkills.AsQueryable();
+        }
+        public IQueryable<CandidateWorkExperience> CandidateWorkExperienceList()
+        {
+            return _HRMDBContext.CandidateWorkExperiences.AsQueryable();
+        }
+        public IQueryable<CandidateLanguage> CandidateLanguageList()
+        {
+            return _HRMDBContext.CandidateLanguages.AsQueryable();
+        }
+        public IQueryable<CandidateResume> CandidateResumeList()
+        {
+            return _HRMDBContext.CandidateResumes.AsQueryable();
+        }
+        public IQueryable<JobApplication> JobApplicationList()
+        {
+            return _HRMDBContext.JobApplications.AsQueryable();
+        }
+        public IQueryable<ApplicationQuestion> ApplicationQuestionList()
+        {
+            return _HRMDBContext.ApplicationQuestions.AsQueryable();
+        }
+        public IQueryable<ApplicationDeclaration> ApplicationDeclarationsList()
+        {
+            return _HRMDBContext.ApplicationDeclarations.AsQueryable();
+        }
+        public IQueryable<ResumeParserUser> ResumeParserUserList()
+        {
+            return _HRMDBContext.ResumeParserUsers.AsQueryable();
+        }
     }
 }

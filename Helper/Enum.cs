@@ -4,7 +4,15 @@ using System.Text;
 
 namespace Helper
 {
-    internal class Enum
+    public class Enum
     {
+
+        public enum LeaveStatusType
+        {
+            Pending = 1,
+            Approved,
+            Rejected,
+            Cancelled,
+        }
     }
 }

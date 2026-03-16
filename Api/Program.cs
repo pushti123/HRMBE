@@ -56,6 +56,8 @@ builder.Services.AddSwaggerGen(options =>
             Array.Empty<string>()
         }
     });
+    options.IgnoreObsoleteProperties();
+    options.IgnoreObsoleteActions();
 });
 builder.Services.AddHttpContextAccessor();
 
@@ -75,6 +77,8 @@ builder.Services.AddScoped<IAuth, AuthService>();
 builder.Services.AddScoped<IPermission, PermissionService>();
 builder.Services.AddScoped<IUser, UserService>();
 builder.Services.AddScoped<ITicket, TicketService>();
+builder.Services.AddScoped<ILeave, LeaveService>();
+builder.Services.AddScoped<IResumeParser, ResumeParserService>();
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);

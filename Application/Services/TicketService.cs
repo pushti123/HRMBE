@@ -222,7 +222,7 @@ namespace Application.Services
             CommonResponse response = new CommonResponse();
             try
             {
-                var statusList = Enum.GetValues(typeof(Status))
+                var statusList = System.Enum.GetValues(typeof(Status))
                                              .Cast<Status>()
                                              .Select(s => new { Id = (int)s, StatusName = s.ToString() })
                                              .ToList();

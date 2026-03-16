@@ -1,0 +1,9 @@
+E:\EmployeeMangementBE_FE\BE>docker build -t api -f Api/Dockerfile .
+
+
+
+here api is image name 
+
+
+E:\EmployeeMangementBE_FE\BE>docker run -d -p 8080:8080 --name myemployeecontainer api
+for the container

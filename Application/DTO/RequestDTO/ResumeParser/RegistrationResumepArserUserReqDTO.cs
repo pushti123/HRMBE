@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Application.DTO.RequestDTO.Auth
+namespace Application.DTO.RequestDTO.ResumeParser
 {
-    public class LoginRequestDTO
+    public class RegistrationResumepArserUserReqDTO
     {
         public string Email { get; set; }
         public string Password { get; set; }
-
-        public string LoggedInFrom {  get; set; }
     }
 }

@@ -1,9 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Text;
+﻿using DocumentFormat.OpenXml.Packaging;
+using Microsoft.AspNetCore.Http;
+using UglyToad.PdfPig;
 
 namespace Helper
 {
@@ -48,6 +45,22 @@ namespace Helper
             return roleId;
         }
 
+        public string ExtractText(string path)
+        {
+            if (path.EndsWith(".pdf"))
+            {
+                using var document = PdfDocument.Open(path);
+                return string.Join(" ", document.GetPages().Select(p => p.Text));
+            }
+
+            if (path.EndsWith(".docx"))
+            {
+                using var doc = WordprocessingDocument.Open(path, false);
+                return doc.MainDocumentPart.Document.Body.InnerText;
+            }
+
+            return "";
+        }
 
     }
 }
